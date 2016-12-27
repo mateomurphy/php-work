@@ -1,7 +1,5 @@
 <?php
 
-
-
 /**
  * Nano
  *
@@ -91,7 +89,6 @@ class Nano {
     return get_object_vars($this);
   }
 
-
   /**
    * Routes a request
    *
@@ -106,20 +103,20 @@ class Nano {
     return false;
   }
 
-	/**
-	 * Returns a URL to the given controller that matches the given parameters
-	 *
-	 * @param string $name
-	 * @param mixed $parameters,...
-	 * @return string
-	 */
-	public function urlFor($name) {
+  /**
+   * Returns a URL to the given controller that matches the given parameters
+   *
+   * @param string $name
+   * @param mixed $parameters,...
+   * @return string
+   */
+  public function urlFor($name) {
     if (!isset($this->routes[$name])) throw new Exception("The route '$name' does not exist");
 
     $args = func_get_args(); array_shift($args);
 
     return call_user_func_array(array($this->routes[$name], 'url'), $args);
-	}
+  }
 
   /**
    * Runs the app
@@ -133,10 +130,10 @@ class Nano {
 
     $this->execute($url, $method);
 
-		if (!headers_sent()) {
-			header("HTTP/1.1 ".$this->status);
-			foreach ($this->headers as $key => $value) header("$key: $value");
-		}
+    if (!headers_sent()) {
+      header("HTTP/1.1 ".$this->status);
+      foreach ($this->headers as $key => $value) header("$key: $value");
+    }
 
     print $this->body;
   }
@@ -155,7 +152,7 @@ class Nano {
       $this->body = $this->notFound($url, $method);
       return $this->body;
     }
-    
+
     $action = array_shift($args);
 
     $cacheFile = $this->applicationPath.'/cache/'.strtolower($action).'.php';
@@ -217,7 +214,6 @@ class Nano {
     $view = new Nano_View($this->applicationPath, $this->getVars());
     return $view->renderFile($template, $locals);
   }
-
 }
 
 /**
@@ -294,25 +290,21 @@ class Nano_Route {
    * @return string
    */
   function url() {
-		$args = func_get_args();
+    $args = func_get_args();
 
-		$regex = $this->regex;
+    $regex = $this->regex;
 
-		preg_match_all('!\(.+?\)!', $regex, $matches);
+    preg_match_all('!\(.+?\)!', $regex, $matches);
 
-		if (count($args) != count($matches[0])) throw new Exception("Could not map parameters to route '$name'");
+    if (count($args) != count($matches[0])) throw new Exception("Could not map parameters to route '$name'");
 
-		while(count($args)) $regex = preg_replace('!\(.+?\)!', array_shift($args), $regex, 1);
+    while(count($args)) $regex = preg_replace('!\(.+?\)!', array_shift($args), $regex, 1);
 
-		return $regex;
-
+    return $regex;
   }
-
 }
 
 class Nano_View {
-
-
   var $appPath;
   var $templateDir;
 
@@ -336,7 +328,6 @@ class Nano_View {
     include($this->templateDir.$name.'.php');
     return ob_get_clean();
   }
-
 }
 
 class Nano_Helper {
@@ -346,122 +337,119 @@ class Nano_Helper {
 
 class Nano_Db {
 
-	/**
-	 * PDO object
-	 *
-	 * @var PDO
-	 */
-	private $pdo;
+  /**
+   * PDO object
+   *
+   * @var PDO
+   */
+  private $pdo;
 
-	private $tables;
+  private $tables;
 
-	public $resultClass = 'stdClass';
+  public $resultClass = 'stdClass';
 
-	/**
-	 * Constructor. The arguments are the same as PDOs
-	 *
-	 * @param string $dns
-	 * @param string $username
-	 * @param string $passwd
-	 * @param array $options
-	 * @return MicroDb
-	 */
-	function __construct($dns, $username, $passwd, $options = null) {
-		$this->tables = array();
+  /**
+   * Constructor. The arguments are the same as PDOs
+   *
+   * @param string $dns
+   * @param string $username
+   * @param string $passwd
+   * @param array $options
+   * @return MicroDb
+   */
+  function __construct($dns, $username, $passwd, $options = null) {
+    $this->tables = array();
 
-		$this->pdo = new PDO($dns, $username, $passwd, $options);
-		$this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $this->pdo = new PDO($dns, $username, $passwd, $options);
+    $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $this->execute("SET NAMES 'utf8'");
-	}
+  }
 
-	/**
-	 * Returns an array containing all the rows that match the query
-	 *
-	 * @param string $sql	    The query to execute. Can contain parameter markers
-	 * @param string $args,...  Any additional argument is bound to markers in the query
-	 * @return array
-	 */
-	function findAll($sql) {
-		$args = func_get_args();
-		array_shift($args);
+  /**
+   * Returns an array containing all the rows that match the query
+   *
+   * @param string $sql     The query to execute. Can contain parameter markers
+   * @param string $args,...  Any additional argument is bound to markers in the query
+   * @return array
+   */
+  function findAll($sql) {
+    $args = func_get_args();
+    array_shift($args);
 
-		$statement = $this->execute($sql, $args);
-		return $statement->fetchAll(PDO::FETCH_CLASS, $this->resultClass);
-	}
+    $statement = $this->execute($sql, $args);
+    return $statement->fetchAll(PDO::FETCH_CLASS, $this->resultClass);
+  }
 
+  /**
+   * Returns the first row that match the query
+   *
+   * @param string $sql     The query to execute. Can contain parameter markers
+   * @param string $args,...  Any additional argument is bound to markers in the query
+   * @return array
+   */
+  function findFirst($sql) {
+    $args = func_get_args();
+    array_shift($args);
 
-	/**
-	 * Returns the first row that match the query
-	 *
-	 * @param string $sql	    The query to execute. Can contain parameter markers
-	 * @param string $args,...  Any additional argument is bound to markers in the query
-	 * @return array
-	 */
-	function findFirst($sql) {
-		$args = func_get_args();
-		array_shift($args);
+    $statement = $this->execute($sql, $args);
+    $obj = $statement->fetchObject($this->resultClass);
+    return $obj;
+  }
 
-		$statement = $this->execute($sql, $args);
-		$obj = $statement->fetchObject($this->resultClass);
-		return $obj;
-	}
+  /**
+   * Performs an insert query, returning the insert id
+   *
+   * @param string $sql     The query to execute. Can contain parameter markers
+   * @param string $args,...  Any additional argument is bound to markers in the query
+   * @return int
+   */
+  function insert($sql) {
+    $args = func_get_args();
+    array_shift($args);
 
+    $statement = $this->execute($sql, $args);
+    return $this->pdo->lastInsertId();
+  }
 
-	/**
-	 * Performs an insert query, returning the insert id
-	 *
-	 * @param string $sql	    The query to execute. Can contain parameter markers
-	 * @param string $args,...  Any additional argument is bound to markers in the query
-	 * @return int
-	 */
-	function insert($sql) {
-		$args = func_get_args();
-		array_shift($args);
+  /**
+   * Performs an update query, returning the number of rows affected
+   *
+   * @param string $sql     The query to execute. Can contain parameter markers
+   * @param string $args,...  Any additional argument is bound to markers in the query
+   * @return int
+   */
+  function update($sql) {
+    $args = func_get_args();
+    array_shift($args);
 
-		$statement = $this->execute($sql, $args);
-		return $this->pdo->lastInsertId();
-	}
+    $statement = $this->execute($sql, $args);
+    return $statement->rowCount();
+  }
 
-	/**
-	 * Performs an update query, returning the number of rows affected
-	 *
-	 * @param string $sql	    The query to execute. Can contain parameter markers
-	 * @param string $args,...  Any additional argument is bound to markers in the query
-	 * @return int
-	 */
-	function update($sql) {
-		$args = func_get_args();
-		array_shift($args);
+  function delete($sql) {
+    $args = func_get_args();
+    array_shift($args);
 
-		$statement = $this->execute($sql, $args);
-		return $statement->rowCount();
-	}
+    $statement = $this->execute($sql, $args);
+    return $statement->rowCount();
+  }
 
-	function delete($sql) {
-		$args = func_get_args();
-		array_shift($args);
+  /**
+   * Prepares and performs a query
+   *
+   * @param string $sql  The query to execute. Can contain parameter markers
+   * @param array $args  An array of parameters to bind to the query's markers
+   * @return PDOStatement
+   */
+  private function execute($sql, $args = array()) {
 
-		$statement = $this->execute($sql, $args);
-		return $statement->rowCount();
-	}
+    if (isset($args[0]) && is_array($args[0])) $args = $args[0];
 
-	/**
-	 * Prepares and performs a query
-	 *
-	 * @param string $sql  The query to execute. Can contain parameter markers
-	 * @param array $args  An array of parameters to bind to the query's markers
-	 * @return PDOStatement
-	 */
-	private function execute($sql, $args = array()) {
+    $statement = $this->pdo->prepare($sql);
+    $statement->execute($args);
 
-		if (isset($args[0]) && is_array($args[0])) $args = $args[0];
-
-		$statement = $this->pdo->prepare($sql);
-		$statement->execute($args);
-
-		return $statement;
-	}
-
+    return $statement;
+  }
 }
 
 /**
